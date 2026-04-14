@@ -1,0 +1,20 @@
+{
+    "TELEGRAM_TOKEN": "8422586220:AAGttjuWMoVUEPb-0vk2eX62gApCHCgumgI",
+    "TELEGRAM_CHAT_IDS": [
+    5672170730,
+       6113458609,
+       7717635724,
+       1275297473,
+       1084691194,
+       1316879218,
+       662897702,
+       6334424658 ],
+    "GITHUB_TOKEN_URL": "https://raw.githubusercontent.com/dipnamdev/tkt_genie_api/refs/heads/main/rcbToken.json",
+    "BASE_URL": "https://rcbscaleapi.ticketgenie.in",
+    "REQUEST_TIMEOUT": 3,
+    "EVENT_CHECK_INTERVAL": 2,
+    "SEAT_CHECK_INTERVAL": 2,
+    "MAX_WORKERS": 20,
+    "MAX_TICKETS_PER_TOKEN": 2,
+    "PREFERRED_STANDS": [8,4,10]
+}
