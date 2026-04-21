@@ -1,6 +1,7 @@
 import json
 import os
 import uuid
+from typing import Optional
 
 # ── DEFAULT CONFIGURATION ────────────────────────────────────────────────
 # These are fallback values. The bot will prioritize 'config.json'.
@@ -62,7 +63,7 @@ def load_config():
 
 CONFIG = load_config()
 
-def get_random_proxy() -> str | None:
+def get_random_proxy() -> Optional[str]:
     """Generate a rotating residential proxy URL (IPRoyal) for event watcher."""
     if not CONFIG.get("USE_PROXY"):
         return None
@@ -79,7 +80,7 @@ def get_random_proxy() -> str | None:
     return f"http://{user}:{pass_base}_session-{session_id}@{host}:{port}"
 
 
-def get_dc_proxy() -> str | None:
+def get_dc_proxy() -> Optional[str]:
     """
     Pick a random datacenter/ISP proxy from DATACENTER_PROXIES list.
     Returns None (Local IP) if list is empty.

@@ -1,6 +1,7 @@
 import asyncio
 import random
 import time
+from typing import Optional, Dict, List
 from rcb_config import CONFIG, get_headers, get_dc_proxy
 import queue_manager
 from notifier import send_success, send_failure
@@ -12,7 +13,7 @@ _HARD_FAIL_KEYWORDS = ("SEAT NOT AVAILABLE", "SOLD OUT", "ALREADY BOOKED", "INVA
 
 # ================= TOKEN PICKER =================
 
-def get_token(token_pool: list) -> dict | None:
+def get_token(token_pool: list) -> Optional[dict]:
     """Pick a least-recently-used token that still has quota."""
     valid = [t for t in token_pool if t["used"] < CONFIG["MAX_TICKETS_PER_TOKEN"]]
 
@@ -24,7 +25,7 @@ def get_token(token_pool: list) -> dict | None:
     return valid[0]   # fastest: always pick the coldest token
 
 
-def group_by_stand(seats: list) -> dict[int, list]:
+def group_by_stand(seats: list) -> Dict[int, List]:
     """Partition a flat seat list into {stand_code: [seats]} buckets."""
     buckets = {}
     for s in seats:
@@ -34,7 +35,7 @@ def group_by_stand(seats: list) -> dict[int, list]:
     return buckets
 
 
-def group_adjacent_seats(seats: list, max_group: int = 4) -> list[list]:
+def group_adjacent_seats(seats: list, max_group: int = 4) -> List[List]:
     """
     Group seats where i_Id values are consecutive.
     Confirmed by user: i_Id and serial_No are the best way to determine adjacency.
