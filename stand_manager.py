@@ -1,7 +1,7 @@
 import asyncio
 import aiohttp
 import time
-from rcb_config import CONFIG, get_headers, get_random_proxy, get_proxy_ip
+from rcb_config import CONFIG, get_headers, get_dc_proxy, get_proxy_ip
 import queue_manager
 
 BASE_URL = CONFIG["BASE_URL"]
@@ -13,12 +13,39 @@ def seat_priority(seat):
     return (seat.get("row_Order", 999), seat.get("seat_No", 9999))
 
 
+# ================= PRE-WARM =================
+
+async def prewarm_stand_connection(session, stand_id, event, token_pool, logger):
+    """
+    Fire one dummy poll before the event goes LIVE to pre-warm the TCP/TLS
+    connection and proxy path. This eliminates the 'Connection closed' on the
+    very first real request after LIVE detection.
+    """
+    url = (
+        f"{BASE_URL}/ticket/seatlist"
+        f"/{event['event_Group_Code']}"
+        f"/{event['event_Code']}"
+        f"/{stand_id}"
+    )
+    token = token_pool[0]
+    headers = get_headers(token=token['token'])
+    proxy_url = get_dc_proxy()
+    try:
+        timeout = aiohttp.ClientTimeout(total=CONFIG["REQUEST_TIMEOUT"])
+        async with session.get(url, headers=headers, proxy=proxy_url, timeout=timeout) as res:
+            _ = await res.read()   # drain response, we don't care about content
+        logger.info(f"🔥 Stand {stand_id}: connection pre-warmed (via {proxy_url or 'local'})")
+    except Exception as e:
+        logger.warning(f"⚠️ Stand {stand_id}: pre-warm failed (harmless): {e}")
+
+
 # ================= STAND MANAGER =================
 
 async def stand_manager(session, stand_id, event, token_pool, logger):
     """
     Continuously polls the seatlist for a given stand.
-    Rotates through token_pool for each request (fastest + avoids rate limits).
+    Uses datacenter/ISP proxies (randomly selected from pool) for low latency.
+    Falls back to residential proxy if DATACENTER_PROXIES list is empty.
     Pushes available, non-blacklisted seats to seat_queue.
     """
     url = (
@@ -41,7 +68,8 @@ async def stand_manager(session, stand_id, event, token_pool, logger):
 
             headers = get_headers(token=token['token'])
 
-            proxy_url = get_random_proxy()
+            # Use datacenter proxy (random from pool); falls back to residential
+            proxy_url = get_dc_proxy()
             ip = await get_proxy_ip(session, proxy_url)
             logger.info(f"🌐 Stand {stand_id} Poll IP: {ip}")
             timeout = aiohttp.ClientTimeout(total=CONFIG["REQUEST_TIMEOUT"])
@@ -92,8 +120,8 @@ async def stand_manager(session, stand_id, event, token_pool, logger):
                 available.sort(key=seat_priority)
 
                 for seat in available:
-                    if not queue_manager.seat_queue:
-                        await asyncio.sleep(0.1)
+                    if queue_manager.seat_queue is None:
+                        await asyncio.sleep(0.5)
                         continue
                         
                     seat_id = seat["i_Id"]

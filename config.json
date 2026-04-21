@@ -13,8 +13,16 @@
     "BASE_URL": "https://rcbscaleapi.ticketgenie.in",
     "REQUEST_TIMEOUT": 3,
     "EVENT_CHECK_INTERVAL": 2,
-    "SEAT_CHECK_INTERVAL": 2,
+    "SEAT_CHECK_INTERVAL": 1,
     "MAX_WORKERS": 20,
     "MAX_TICKETS_PER_TOKEN": 2,
-    "PREFERRED_STANDS": [8,4,10]
+    "PREFERRED_STANDS": [8,4,10],
+
+    "LIVE_CONFIRM_COUNT": 2,
+
+    "DATACENTER_PROXIES": [
+        "http://user:pass@dc_proxy_host_1:port",
+        "http://user:pass@dc_proxy_host_2:port",
+        "http://user:pass@dc_proxy_host_3:port"
+    ]
 }

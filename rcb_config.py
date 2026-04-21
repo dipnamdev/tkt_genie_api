@@ -8,7 +8,7 @@ DEFAULT_CONFIG = {
     "TELEGRAM_TOKEN": "8422586220:AAGttjuWMoVUEPb-0vk2eX62gApCHCgumgI",
     "TELEGRAM_TOKEN_BOOK" : "8740379486:AAFzOTOhkL6v37OizS6ovCBogRUD2r0TwCI",
     "TELEGRAM_CHAT_IDS": [
-    5672170730,
+       5672170730,
        6113458609,
        7717635724,
        1275297473,
@@ -25,12 +25,19 @@ DEFAULT_CONFIG = {
     "BASE_URL": "https://rcbscaleapi.ticketgenie.in",
     "REQUEST_TIMEOUT": 3,
 
-    # ── Proxy (IPRoyal) ───────────────────────────────────────────────────
+    # ── Proxy (IPRoyal — residential, used for event watcher only) ──────────
     "USE_PROXY": True,
     "PROXY_USER": "f5n2sGkXnhUyhPgT",
     "PROXY_PASS_BASE": "E3JIulqJDeUxUCXo_country-in",
     "PROXY_HOST": "geo.iproyal.com",
     "PROXY_PORT": "12321",
+
+    # ── Datacenter / ISP proxies (stand managers + workers) ──────────────
+    # Add your datacenter/ISP proxy URLs here in full format:
+    # "http://user:pass@host:port" or "http://host:port" (if no auth)
+    # Stand managers and workers will randomly pick from this list each request.
+    # Leave empty [] to fall back to residential proxy.
+    "DATACENTER_PROXIES": [],
 
     # ── Timing ────────────────────────────────────────────────────────────
     "EVENT_CHECK_INTERVAL": 2,
@@ -40,8 +47,13 @@ DEFAULT_CONFIG = {
     "MAX_WORKERS": 20,
     "MAX_TICKETS_PER_TOKEN": 2,
 
+    # ── Flash-LIVE protection ─────────────────────────────────────────────
+    # Number of consecutive LIVE polls needed before launching workers.
+    # Use 1 for instant launch, 2-3 to avoid false triggers.
+    "LIVE_CONFIRM_COUNT": 2,
+
     # ── Stands to monitor ─────────────────────────────────────────────────
-    "PREFERRED_STANDS": [9, 11, 12, 13, 14,8,5, 4],
+    "PREFERRED_STANDS": [9, 11, 12, 13, 14, 8, 5, 4],
 }
 
 def load_config():
@@ -64,7 +76,7 @@ def load_config():
 CONFIG = load_config()
 
 def get_random_proxy() -> str | None:
-    """Generate a rotating proxy URL for IPRoyal with a random session ID."""
+    """Generate a rotating residential proxy URL (IPRoyal) for event watcher."""
     if not CONFIG.get("USE_PROXY"):
         return None
     session_id = uuid.uuid4().hex[:8]  # short random session ID
@@ -75,6 +87,20 @@ def get_random_proxy() -> str | None:
 
     # Important format: password_session-<ID>
     return f"http://{user}:{pass_base}_session-{session_id}@{host}:{port}"
+
+
+def get_dc_proxy() -> str | None:
+    """
+    Pick a random datacenter/ISP proxy from DATACENTER_PROXIES list.
+    Used by stand managers and workers for low-latency requests.
+    Falls back to residential proxy if list is empty.
+    """
+    import random
+    dc_proxies = CONFIG.get("DATACENTER_PROXIES", [])
+    if dc_proxies:
+        return random.choice(dc_proxies)
+    # fallback: residential
+    return get_random_proxy()
 
 async def get_proxy_ip(session, proxy_url: str) -> str:
     """Fetch the actual IP assigned by IPRoyal for this specific proxy URL."""
@@ -97,7 +123,6 @@ def get_headers(token=None, is_post=False):
     headers = {
         "accept": "application/json, text/plain, */*",
         "accept-language": "en-US,en;q=0.9",
-        "authorization": f"Bearer {token}" if token else None,
         "origin": "https://shop.royalchallengers.com",
         "priority": "u=1, i",
         "referer": "https://shop.royalchallengers.com/",

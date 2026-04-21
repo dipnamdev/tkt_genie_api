@@ -6,10 +6,11 @@ import time
 seat_queue: asyncio.Queue | None = None
 
 def init_queue():
-    """Lazy initialization to avoid import-time loop issues."""
+    """Lazy initialization of the asyncio Queue to avoid issues with event loops at import time."""
     global seat_queue
     if seat_queue is None:
         seat_queue = asyncio.Queue(maxsize=10000)
+    return seat_queue
 
 # ================= SEAT STATE =================
 # Lifecycle: new -> queued -> trying -> success / failed / retry

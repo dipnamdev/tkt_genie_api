@@ -1,7 +1,7 @@
 import asyncio
 import random
 import time
-from rcb_config import CONFIG, get_headers, get_random_proxy, get_proxy_ip
+from rcb_config import CONFIG, get_headers, get_dc_proxy, get_proxy_ip
 import queue_manager
 from notifier import send_success, send_failure
 
@@ -96,7 +96,7 @@ async def _book_group(session, group: list, event: dict, token: dict, logger):
     for s in group:
         queue_manager.seat_state[s["i_Id"]] = "trying"
 
-    proxy_url = get_random_proxy()
+    proxy_url = get_dc_proxy()
     ip = await get_proxy_ip(session, proxy_url)
     logger.info(f"🌐 Worker IP for checkout: {ip}")
     try:
@@ -126,10 +126,14 @@ async def _book_group(session, group: list, event: dict, token: dict, logger):
                     queue_manager.blacklist_seat(sid)
                     logger.warning(f"🚫 Blacklisted seat {sid} | reason: {msg}")
                 elif "LIMIT" in msg_upper:
-                    # Token hit a limit — re-queue each seat individually so a
-                    # fresh token can try them one at a time
+                    # Token hit match/stand limit — exhaust it immediately so it's
+                    # never dispatched again, then re-queue each seat solo for a
+                    # fresh token to pick up.
+                    token["used"] = CONFIG["MAX_TICKETS_PER_TOKEN"]  # exhaust now
+                    token["last_used"] = time.time()
                     queue_manager.seat_state[sid] = "queued"
-                    await queue_manager.seat_queue.put(s)
+                    if queue_manager.seat_queue is not None:
+                        await queue_manager.seat_queue.put(s)
                     logger.info(f"🔄 Re-queued seat {sid} for solo retry")
                 else:
                     queue_manager.blacklist_seat(sid)   # unknown failure → safe to blacklist
@@ -155,8 +159,8 @@ async def worker(session, token_pool: list, event: dict, logger):
 
     while True:
         try:
-            if not queue_manager.seat_queue:
-                await asyncio.sleep(0.1)
+            if queue_manager.seat_queue is None:
+                await asyncio.sleep(0.5)
                 continue
                 
             seat = await queue_manager.seat_queue.get()
@@ -177,6 +181,8 @@ async def worker(session, token_pool: list, event: dict, logger):
             batch = [seat]
             try:
                 while len(batch) < max_batch * 4:   # grab up to 4x capacity for grouping
+                    if queue_manager.seat_queue is None:
+                        break
                     extra = queue_manager.seat_queue.get_nowait()
                     if extra and not queue_manager.is_blacklisted(extra["i_Id"]):
                         if queue_manager.seat_state.get(extra["i_Id"]) in ("queued", "new"):
@@ -199,7 +205,8 @@ async def worker(session, token_pool: list, event: dict, logger):
                     # put seats back to retry later
                     for s in group:
                         queue_manager.seat_state[s["i_Id"]] = "queued"
-                        await queue_manager.seat_queue.put(s)
+                        if queue_manager.seat_queue is not None:
+                            await queue_manager.seat_queue.put(s)
                     await asyncio.sleep(0.5)
                     continue
 

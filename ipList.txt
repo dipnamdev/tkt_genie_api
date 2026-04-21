@@ -1,0 +1,17 @@
+curl -v -x "http://ctodbuwc:t6p9nk4s74m5@198.23.239.134:6540/" -L https://www.district.in/events/tata-ipl-2026-match-35---delhi-capitals-vs-punjab-kings-buy-tickets -w "Total time: %{time_total}s\n"
+
+curl -v -x "http://ctodbuwc:t6p9nk4s74m5@198.23.239.134:6540/" -L https://shop.royalchallengers.com/ -w "Total time: %{time_total}s\n"
+
+curl --proxy "http://ctodbuwc:t6p9nk4s74m5@45.38.107.97:6014/" https://ipv4.webshare.io/
+
+curl --proxy "http://ctodbuwc:t6p9nk4s74m5@31.59.20.176:6754/" https://ipv4.webshare.io/
+
+curl --proxy "http://ctodbuwc:t6p9nk4s74m5@45.38.107.97:6014/" https://ipv4.webshare.io/
+
+curl --proxy "http://ctodbuwc:t6p9nk4s74m5@107.172.163.27:6543/" https://ipv4.webshare.io/
+
+curl --proxy "http://ctodbuwc:t6p9nk4s74m5@142.111.67.146:5611/" https://ipv4.webshare.io/
+
+curl --proxy "http://ctodbuwc:t6p9nk4s74m5@31.58.9.4:6077/" https://ipv4.webshare.io/
+
+curl -x dc.oxylabs.io:8001 -U "expertbook_FsUJd:Roopesh_1234" -L https://shop.royalchallengers.com/ -w "Total time: %{time_total}s\n"
