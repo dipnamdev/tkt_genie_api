@@ -7,7 +7,7 @@ from rcb_config import CONFIG
 
 # ================= TOKEN LOADER =================
 
-async def load_tokens(retries: int = 3, timeout: int = 10) -> list:
+async def load_tokens(retries: int = 3, timeout: int = 10, logger=None) -> list:
     """
     Load tokens. Prioritize local tokens.json, fall back to GitHub.
 
@@ -52,14 +52,22 @@ async def load_tokens(retries: int = 3, timeout: int = 10) -> list:
             if not tokens:
                 raise Exception("No valid tokens found in JSON")
 
-            print(f"✅ Loaded {len(tokens)} tokens from GitHub")
+            if logger:
+                logger.info(f"Loaded {len(tokens)} tokens from GitHub")
+            else:
+                print(f"Loaded {len(tokens)} tokens from GitHub")
             return tokens
  
         except Exception as e:
-            print(f"⚠️ Token load attempt {attempt} failed: {e}")
+            if logger:
+                logger.warning(f"Token load attempt {attempt} failed: {e}")
+            else:
+                print(f"Token load attempt {attempt} failed: {e}")
+            
             if attempt == retries:
-                raise Exception("❌ Failed to load tokens after retries")
+                raise Exception("Failed to load tokens after retries")
             await asyncio.sleep(2)
+
 
 def parse_token_data(data: list) -> list:
     """Helper to parse token list into internal pool format."""

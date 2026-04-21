@@ -1,7 +1,7 @@
 import asyncio
 import random
 import time
-from rcb_config import CONFIG, get_headers, get_dc_proxy, get_proxy_ip
+from rcb_config import CONFIG, get_headers, get_dc_proxy
 import queue_manager
 from notifier import send_success, send_failure
 
@@ -97,8 +97,6 @@ async def _book_group(session, group: list, event: dict, token: dict, logger):
         queue_manager.seat_state[s["i_Id"]] = "trying"
 
     proxy_url = get_dc_proxy()
-    ip = await get_proxy_ip(session, proxy_url)
-    logger.info(f"🌐 Worker IP for checkout: {ip}")
     try:
         async with session.post(BOOK_API, json=payload, headers=headers, proxy=proxy_url) as res:
             data = await res.json(content_type=None)

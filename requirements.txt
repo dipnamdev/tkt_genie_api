@@ -1,2 +1,2 @@
 aiohttp==3.10.5
-requests==2.32.3
+# requests was removed as it is not used in the codebase

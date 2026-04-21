@@ -1,28 +1,48 @@
 {
     "TELEGRAM_TOKEN": "8422586220:AAGttjuWMoVUEPb-0vk2eX62gApCHCgumgI",
+    "TELEGRAM_TOKEN_BOOK": "8740379486:AAFzOTOhkL6v37OizS6ovCBogRUD2r0TwCI",
     "TELEGRAM_CHAT_IDS": [
-    5672170730,
-       6113458609,
-       7717635724,
-       1275297473,
-       1084691194,
-       1316879218,
-       662897702,
-       6334424658 ],
-    "GITHUB_TOKEN_URL": "https://raw.githubusercontent.com/dipnamdev/tkt_genie_api/refs/heads/main/rcbToken.json",
+        5672170730,
+        6113458609,
+        7717635724,
+        1275297473,
+        1084691194,
+        1316879218,
+        662897702,
+        6334424658
+    ],
+    "TELEGRAM_ADMIN_CHAT_IDS": [
+        5672170730,
+        6113458609
+    ],
+    "GITHUB_TOKEN_URL": "https://raw.githubusercontent.com/dipnamdev/tkt_genie_api/refs/heads/main/rcbTokens.json",
     "BASE_URL": "https://rcbscaleapi.ticketgenie.in",
     "REQUEST_TIMEOUT": 3,
     "EVENT_CHECK_INTERVAL": 2,
     "SEAT_CHECK_INTERVAL": 1,
     "MAX_WORKERS": 20,
     "MAX_TICKETS_PER_TOKEN": 2,
-    "PREFERRED_STANDS": [8,4,10],
-
+    "PREFERRED_STANDS": [
+      9,10,11,12,13,14
+    ],
     "LIVE_CONFIRM_COUNT": 2,
-
+    "USE_PROXY": true,
+    "PROXY_USER": "f5n2sGkXnhUyhPgT",
+    "PROXY_PASS_BASE": "E3JIulqJDeUxUCXo_country-in",
+    "PROXY_HOST": "geo.iproyal.com",
+    "PROXY_PORT": "12321",
     "DATACENTER_PROXIES": [
-        "http://user:pass@dc_proxy_host_1:port",
-        "http://user:pass@dc_proxy_host_2:port",
-        "http://user:pass@dc_proxy_host_3:port"
+        "http://dipesh3rde:qWxT4Q2CQP@202.91.69.43:49155",
+        "http://dipesh3rde:qWxT4Q2CQP@202.91.85.44:49155",
+        "http://dipesh3rde:qWxT4Q2CQP@202.91.84.249:49155",
+        "http://dipesh3rde:qWxT4Q2CQP@202.91.84.243:49155",
+        "http://dipesh3rde:qWxT4Q2CQP@202.91.69.96:49155",
+        "http://dipesh3rde:qWxT4Q2CQP@202.91.91.215:49155",
+        "http://dipesh3rde:qWxT4Q2CQP@202.91.85.144:49155",
+        "http://dipesh3rde:qWxT4Q2CQP@202.91.84.246:49155",
+        "http://dipesh3rde:qWxT4Q2CQP@202.91.84.239:49155",
+        "http://dipesh3rde:qWxT4Q2CQP@202.91.76.109:49155",
+        "http://dipesh3rde:qWxT4Q2CQP@202.91.76.111:49155",
+        "http://dipesh3rde:qWxT4Q2CQP@202.91.69.82:49155"
     ]
 }

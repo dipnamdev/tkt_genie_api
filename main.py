@@ -45,7 +45,7 @@ async def token_refresh_loop(token_pool: list, logger: logging.Logger):
         await asyncio.sleep(3600)
         try:
             logger.info("🔄 Refreshing tokens from GitHub...")
-            new_tokens = await load_tokens()
+            new_tokens = await load_tokens(logger=logger)
             if new_tokens:
                 token_pool[:] = new_tokens
                 logger.info(f"✅ Token pool refreshed! Total: {len(token_pool)}")
@@ -132,7 +132,7 @@ async def main():
     try:
         # ── Load tokens ───────────────────────────────────────────────────
         logger.info("🔑 Loading tokens from GitHub...")
-        token_pool = await load_tokens()
+        token_pool = await load_tokens(logger=logger)
         logger.info(f"✅ Loaded {len(token_pool)} tokens")
 
         # ── Initialize Queue ─────────────────────────────────────────────

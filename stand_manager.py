@@ -1,7 +1,7 @@
 import asyncio
 import aiohttp
 import time
-from rcb_config import CONFIG, get_headers, get_dc_proxy, get_proxy_ip
+from rcb_config import CONFIG, get_headers, get_dc_proxy
 import queue_manager
 
 BASE_URL = CONFIG["BASE_URL"]
@@ -68,10 +68,8 @@ async def stand_manager(session, stand_id, event, token_pool, logger):
 
             headers = get_headers(token=token['token'])
 
-            # Use datacenter proxy (random from pool); falls back to residential
+            # Use datacenter proxy (random from pool); falls back to local IP
             proxy_url = get_dc_proxy()
-            ip = await get_proxy_ip(session, proxy_url)
-            logger.info(f"🌐 Stand {stand_id} Poll IP: {ip}")
             timeout = aiohttp.ClientTimeout(total=CONFIG["REQUEST_TIMEOUT"])
             async with session.get(url, headers=headers, proxy=proxy_url, timeout=timeout) as res:
                 if res.status != 200:

@@ -2,62 +2,49 @@ import json
 import os
 import uuid
 
-# Default values
+# ── DEFAULT CONFIGURATION ────────────────────────────────────────────────
+# These are fallback values. The bot will prioritize 'config.json'.
 DEFAULT_CONFIG = {
-    # ── Telegram ──────────────────────────────────────────────────────────
-    "TELEGRAM_TOKEN": "8422586220:AAGttjuWMoVUEPb-0vk2eX62gApCHCgumgI",
-    "TELEGRAM_TOKEN_BOOK" : "8740379486:AAFzOTOhkL6v37OizS6ovCBogRUD2r0TwCI",
-    "TELEGRAM_CHAT_IDS": [
-       5672170730,
-       6113458609,
-       7717635724,
-       1275297473,
-       1084691194,
-       1316879218,
-       662897702,
-       6334424658 ],
-    "TELEGRAM_ADMIN_CHAT_IDS": [5672170730, 6113458609],  # for critical alerts only
+    # Telegram
+    "TELEGRAM_TOKEN": "",
+    "TELEGRAM_TOKEN_BOOK": "",
+    "TELEGRAM_CHAT_IDS": [],
+    "TELEGRAM_ADMIN_CHAT_IDS": [],
 
-    # ── Token source ──────────────────────────────────────────────────────
-    "GITHUB_TOKEN_URL": "https://raw.githubusercontent.com/dipnamdev/tkt_genie_api/refs/heads/main/rcbToken.json",
+    # Token source
+    "GITHUB_TOKEN_URL": "https://raw.githubusercontent.com/dipnamdev/tkt_genie_api/refs/heads/main/rcbTokens.json",
 
-    # ── API ───────────────────────────────────────────────────────────────
+    # API
     "BASE_URL": "https://rcbscaleapi.ticketgenie.in",
     "REQUEST_TIMEOUT": 3,
 
-    # ── Proxy (IPRoyal — residential, used for event watcher only) ──────────
-    "USE_PROXY": True,
-    "PROXY_USER": "f5n2sGkXnhUyhPgT",
-    "PROXY_PASS_BASE": "E3JIulqJDeUxUCXo_country-in",
+    # Proxy (IPRoyal Residential)
+    "USE_PROXY": False,
+    "PROXY_USER": "",
+    "PROXY_PASS_BASE": "",
     "PROXY_HOST": "geo.iproyal.com",
     "PROXY_PORT": "12321",
 
-    # ── Datacenter / ISP proxies (stand managers + workers) ──────────────
-    # Add your datacenter/ISP proxy URLs here in full format:
-    # "http://user:pass@host:port" or "http://host:port" (if no auth)
-    # Stand managers and workers will randomly pick from this list each request.
-    # Leave empty [] to fall back to residential proxy.
+    # Datacenter / ISP proxies pool
     "DATACENTER_PROXIES": [],
 
-    # ── Timing ────────────────────────────────────────────────────────────
+    # Timing
     "EVENT_CHECK_INTERVAL": 2,
     "SEAT_CHECK_INTERVAL": 1,
 
-    # ── Concurrency ───────────────────────────────────────────────────────
+    # Concurrency
     "MAX_WORKERS": 20,
     "MAX_TICKETS_PER_TOKEN": 2,
 
-    # ── Flash-LIVE protection ─────────────────────────────────────────────
-    # Number of consecutive LIVE polls needed before launching workers.
-    # Use 1 for instant launch, 2-3 to avoid false triggers.
+    # Flash-LIVE protection
     "LIVE_CONFIRM_COUNT": 2,
 
-    # ── Stands to monitor ─────────────────────────────────────────────────
-    "PREFERRED_STANDS": [9, 11, 12, 13, 14, 8, 5, 4],
+    # Stands to monitor
+    "PREFERRED_STANDS": [],
 }
 
 def load_config():
-    # Get the directory where this script is located
+    """Load config.json and merge with DEFAULT_CONFIG."""
     base_dir = os.path.dirname(os.path.abspath(__file__))
     config_path = os.path.join(base_dir, "config.json")
     
@@ -79,35 +66,35 @@ def get_random_proxy() -> str | None:
     """Generate a rotating residential proxy URL (IPRoyal) for event watcher."""
     if not CONFIG.get("USE_PROXY"):
         return None
-    session_id = uuid.uuid4().hex[:8]  # short random session ID
+        
     user = CONFIG.get("PROXY_USER")
     pass_base = CONFIG.get("PROXY_PASS_BASE")
     host = CONFIG.get("PROXY_HOST")
     port = CONFIG.get("PROXY_PORT")
 
-    # Important format: password_session-<ID>
+    if not all([user, pass_base, host, port]):
+        return None
+
+    session_id = uuid.uuid4().hex[:8]
     return f"http://{user}:{pass_base}_session-{session_id}@{host}:{port}"
 
 
 def get_dc_proxy() -> str | None:
     """
     Pick a random datacenter/ISP proxy from DATACENTER_PROXIES list.
-    Used by stand managers and workers for low-latency requests.
-    Falls back to residential proxy if list is empty.
+    Returns None (Local IP) if list is empty.
     """
     import random
     dc_proxies = CONFIG.get("DATACENTER_PROXIES", [])
     if dc_proxies:
         return random.choice(dc_proxies)
-    # fallback: residential
-    return get_random_proxy()
+    return None  # Fallback to local IP
 
 async def get_proxy_ip(session, proxy_url: str) -> str:
-    """Fetch the actual IP assigned by IPRoyal for this specific proxy URL."""
+    """Fetch the actual IP assigned for a specific proxy URL."""
     if not proxy_url:
         return "LOCAL"
     try:
-        # Hit a fast IP resolving service
         async with session.get("http://ipv4.icanhazip.com", proxy=proxy_url, timeout=3) as res:
             if res.status == 200:
                 ip = await res.text()
@@ -117,9 +104,7 @@ async def get_proxy_ip(session, proxy_url: str) -> str:
         return f"Fetch Error: {e}"
 
 def get_headers(token=None, is_post=False):
-    """
-    Returns a dictionary of headers matching the user-provided browser footprint.
-    """
+    """Returns headers with modern browser footprint."""
     headers = {
         "accept": "application/json, text/plain, */*",
         "accept-language": "en-US,en;q=0.9",
@@ -142,15 +127,3 @@ def get_headers(token=None, is_post=False):
         headers["content-type"] = "application/json"
 
     return headers
-
-    # 5672170730,
-    #    6113458609,
-    #    7717635724,
-    #    1275297473,
-    #    1084691194,
-    #    1316879218,
-    #    662897702,
-    #    6334424658,
-    #    840865734,
-    #    6740772318,
-    #    867565941

@@ -24,14 +24,21 @@ async def event_watcher(session, token_pool, logger) -> dict:
     live_streak = 0        # consecutive LIVE detections
     live_event = None      # candidate event to return
 
+    proxy_url = get_random_proxy()
+    proxy_use_count = 0
+
     while True:
         try:
+            if proxy_use_count >= 5:
+                proxy_url = get_random_proxy()
+                proxy_use_count = 0
+            
+            proxy_use_count += 1
+
             # Rotate token for each request
             token = token_pool[token_idx % len(token_pool)]
             token_idx += 1
             headers = get_headers(token=token['token'])
-
-            proxy_url = get_random_proxy()
             ip = await get_proxy_ip(session, proxy_url)
             logger.info(f"🌐 Event Watcher Poll IP: {ip}")
             async with session.get(url, headers=headers, proxy=proxy_url) as res:
